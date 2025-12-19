@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 권한 테스트 (/permissions)</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f9f9f9;
+    }
+    .permission-section {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    h2 {
+        margin-top: 0;
+        color: #333;
+    }
+    button {
+        padding: 8px 15px;
+        font-size: 14px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .status {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #555;
+    }
+    .success { color: green; }
+    .failure { color: red; }
+    .info { color: orange; }
+</style>
+</head>
+<body>
+
+<h1>웹 권한 테스트 페이지</h1>
+
+<div class="permission-section">
+    <h2>📢 1. 알림 (Notification) 권한</h2>
+    <button onclick="testNotificationPermission()">알림 권한 요청 및 확인</button>
+    <div id="notificationStatus" class="status">상태: 대기 중</div>
+</div>
+
+<div class="permission-section">
+    <h2>🎙️ 2. 마이크 및 카메라 (Media) 권한</h2>
+    <button onclick="testMediaPermission('microphone')">마이크 권한 요청</button>
+    <button onclick="testMediaPermission('camera')">카메라 권한 요청</button>
+    <div id="mediaStatus" class="status">상태: 대기 중</div>
+    <video id="webcamPreview" style="width: 100px; height: 75px; border: 1px solid #ccc; margin-top: 10px; display: none;" autoplay muted></video>
+</div>
+
+<div class="permission-section">
+    <h2>🗺️ 3. 위치 정보 (Geolocation) 권한</h2>
+    <button onclick="testGeolocationPermission()">위치 정보 요청</button>
+    <div id="geolocationStatus" class="status">상태: 대기 중</div>
+</div>
+
+<div class="permission-section">
+    <h2>📋 4. 클립보드 읽기 (Clipboard Read) 권한</h2>
+    <p>(클립보드에 텍스트를 복사한 후 버튼을 누르세요)</p>
+    <button onclick="testClipboardRead()">클립보드 내용 출력</button>
+    <div id="clipboardStatus" class="status">상태: 대기 중</div>
+</div>
+
+<div class="permission-section">
+    <h2>🖥️ 5. 화면 공유 (Screen Share) 권한</h2>
+    <button onclick="testScreenShare()">화면 공유 요청</button>
+    <div id="screenShareStatus" class="status">상태: 대기 중</div>
+</div>
+
+<script>
+    function updateStatus(elementId, message, type = 'info') {
+        const element = document.getElementById(elementId);
+        element.className = 'status ' + type;
+        element.innerText = '상태: ' + message;
+    }
+
+    function testNotificationPermission() {
+        if (!('Notification' in window)) {
+            updateStatus('notificationStatus', '브라우저가 알림을 지원하지 않습니다.', 'failure');
+            return;
+        }
+        
+        Notification.requestPermission().then(permission => {
+            updateStatus('notificationStatus', `요청 결과: ${permission}`, permission === 'granted' ? 'success' : 'failure');
+        });
+    }
+
+    async function testMediaPermission(type) {
+        const constraints = { video: type === 'camera', audio: type === 'microphone' };
+        const statusId = 'mediaStatus';
+        const previewElement = document.getElementById('webcamPreview');
+        
+        if (window.currentStream) {
+            window.currentStream.getTracks().forEach(track => track.stop());
+            window.currentStream = null;
+            previewElement.style.display = 'none';
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            updateStatus(statusId, '브라우저가 MediaDevices를 지원하지 않습니다.', 'failure');
+            return;
+        }
+
+        try {
+            updateStatus(statusId, `${type} 권한 요청 중...`, 'info');
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            window.currentStream = stream;
+            
+            if (type === 'camera') {
+                previewElement.srcObject = stream;
+                previewElement.style.display = 'block';
+            }
+
+            updateStatus(statusId, `${type} 권한 성공 (접근 허용됨)`, 'success');
+        } catch (error) {
+            let msg = error.name === 'NotAllowedError' ? '권한 거부됨 (NotAllowedError)' : `오류 발생: ${error.message}`;
+            updateStatus(statusId, msg, 'failure');
+        }
+    }
+
+    function testGeolocationPermission() {
+        if (!navigator.geolocation) {
+            updateStatus('geolocationStatus', '브라우저가 위치 정보를 지원하지 않습니다.', 'failure');
+            return;
+        }
+        
+        updateStatus('geolocationStatus', '위치 정보 권한 요청 중...', 'info');
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                updateStatus('geolocationStatus', '권한 성공 (위치: ' + position.coords.latitude.toFixed(2) + ', ' + position.coords.longitude.toFixed(2) + ')', 'success');
+            },
+            (error) => {
+                let msg = error.code === error.PERMISSION_DENIED ? '권한 거부됨 (PERMISSION_DENIED)' : `오류 발생: ${error.message}`;
+                updateStatus('geolocationStatus', msg, 'failure');
+            }
+        );
+    }
+
+    async function testClipboardRead() {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            updateStatus('clipboardStatus', '브라우저가 Async Clipboard API를 지원하지 않습니다.', 'failure');
+            return;
+        }
+        
+        try {
+            updateStatus('clipboardStatus', '클립보드 읽기 요청 중...', 'info');
+            const text = await navigator.clipboard.readText();
+            updateStatus('clipboardStatus', `성공, 내용: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`, 'success');
+        } catch (error) {
+            let msg = error.name === 'NotAllowedError' ? '권한 거부됨 (HTTPS 및 권한 확인 필요)' : `오류 발생: ${error.message}`;
+            updateStatus('clipboardStatus', msg, 'failure');
+        }
+    }
+    
+    async function testScreenShare() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            updateStatus('screenShareStatus', '브라우저가 Screen Capture API를 지원하지 않습니다.', 'failure');
+            return;
+        }
+        
+        try {
+            updateStatus('screenShareStatus', '화면 공유 권한 요청 중...', 'info');
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            stream.getTracks().forEach(track => track.stop());
+            
+            updateStatus('screenShareStatus', '권한 성공 (화면 공유 요청 창이 나타났습니다)', 'success');
+        } catch (error) {
+            let msg = error.name === 'NotAllowedError' ? '사용자 또는 시스템에서 거부됨' : `오류 발생: ${error.message}`;
+            updateStatus('screenShareStatus', msg, 'failure');
+        }
+    }
+</script>
+
+</body>
+</html>
