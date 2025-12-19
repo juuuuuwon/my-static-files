@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Viewer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e1e;
+        color: #d4d4d4;
+    }
+
+    .header {
+        background: #2d2d30;
+        padding: 1rem;
+        border-bottom: 1px solid #3e3e42;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+        color: #ffffff;
+    }
+
+    .container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .editor-pane, .preview-pane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .pane-header {
+        background: #2d2d30;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #3e3e42;
+        font-weight: 600;
+        color: #cccccc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .fullscreen-btn {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .fullscreen-btn:hover {
+        background: #005a9e;
+    }
+
+    .preview-pane.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        flex: none;
+    }
+
+    .editor-pane.hidden {
+        display: none;
+    }
+
+    .editor-pane {
+        border-right: 1px solid #3e3e42;
+    }
+
+    #editor {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        outline: none;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        resize: none;
+        background: #1e1e1e;
+        color: #d4d4d4;
+    }
+
+    #preview {
+        flex: 1;
+        padding: 4rem;
+        overflow-y: auto;
+        background: #ffffff;
+        width: 100%;
+    }
+
+    #preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 {
+        margin-top: 2.5em;
+        margin-bottom: 1em;
+        font-weight: 700;
+        color: #1a1a1a;
+        line-height: 1.25;
+        letter-spacing: -0.025em;
+    }
+
+    #preview h1 {
+        font-size: 2.25em;
+        margin-top: 0;
+        padding-top: 0;
+    }
+
+    #preview h2 {
+        font-size: 1.75em;
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    #preview h3 { 
+        font-size: 1.5em;
+    }
+    
+    #preview h4 { 
+        font-size: 1.25em;
+    }
+
+    #preview p {
+        margin-bottom: 1.5em;
+        line-height: 1.75;
+        color: #1f2937;
+        font-size: 1.0625em;
+    }
+
+    #preview ul, #preview ol {
+        margin-bottom: 1.5em;
+        padding-left: 1.75em;
+        line-height: 1.75;
+    }
+
+    #preview li {
+        margin-bottom: 0.5em;
+        color: #1f2937;
+    }
+
+    #preview ul li::marker {
+        color: #4b5563;
+    }
+
+    #preview code {
+        background: #f3f4f6;
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 0.875em;
+        color: #dc2626;
+    }
+
+    #preview pre {
+        background: #1f2937;
+        padding: 1.5em;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 2em 0;
+        line-height: 1.6;
+    }
+
+    #preview pre code {
+        background: none;
+        padding: 0;
+        color: #f3f4f6;
+        border: none;
+        font-size: 0.875em;
+    }
+
+    #preview blockquote {
+        border-left: 3px solid #3b82f6;
+        padding-left: 1.5em;
+        margin: 2em 0;
+        color: #1e40af;
+        font-style: normal;
+        background: #eff6ff;
+        padding: 1em 1.5em;
+        border-radius: 4px;
+    }
+
+    #preview a {
+        color: #2563eb;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    #preview a:hover {
+        color: #1d4ed8;
+    }
+
+    #preview table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 2em 0;
+    }
+
+    #preview th, #preview td {
+        border: 1px solid #e5e7eb;
+        padding: 0.75em 1em;
+        text-align: left;
+        color: #111827;
+    }
+
+    #preview th {
+        background: #f9fafb;
+        color: #111827;
+        font-weight: 600;
+        font-size: 0.875em;
+    }
+
+    #preview tr:hover {
+        background: #f9fafb;
+    }
+
+    #preview img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 2em 0;
+    }
+
+    #preview hr {
+        border: none;
+        height: 1px;
+        background: #e5e7eb;
+        margin: 3em 0;
+    }
+
+    #preview strong {
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+
+    #preview em {
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .editor-pane {
+            border-right: none;
+            border-bottom: 1px solid #3e3e42;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>📝 마크다운 뷰어</h1>
+</div>
+
+<div class="container">
+    <div class="editor-pane">
+        <div class="pane-header">마크다운 입력</div>
+        <textarea id="editor" placeholder="여기에 마크다운을 입력하세요...
+# 제목
+## 부제목
+
+**굵은 글씨** 및 *기울임* 텍스트
+
+- 리스트 항목 1
+- 리스트 항목 2
+
+[링크](https://example.com)
+
+`코드`
+
+```javascript
+// 코드 블록
+console.log('Hello, World!');
+```
+"></textarea>
+    </div>
+    
+    <div class="preview-pane">
+        <div class="pane-header">
+            <span>미리보기</span>
+            <button class="fullscreen-btn" id="fullscreenBtn">🔍 전체화면</button>
+        </div>
+        <div id="preview"></div>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const previewPane = document.querySelector('.preview-pane');
+    const editorPane = document.querySelector('.editor-pane');
+    let isFullscreen = false;
+
+    // Marked.js 설정
+    marked.setOptions({
+        breaks: true,
+        gfm: true
+    });
+
+    function updatePreview() {
+        const markdown = editor.value;
+        preview.innerHTML = marked.parse(markdown);
+    }
+
+    function toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+        
+        if (isFullscreen) {
+            previewPane.classList.add('fullscreen');
+            editorPane.classList.add('hidden');
+            fullscreenBtn.textContent = '↩️ 나가기';
+        } else {
+            previewPane.classList.remove('fullscreen');
+            editorPane.classList.remove('hidden');
+            fullscreenBtn.textContent = '🔍 전체화면';
+        }
+    }
+
+    editor.addEventListener('input', updatePreview);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    // 초기 렌더링
+    updatePreview();
+</script>
+</body>
+</html>
