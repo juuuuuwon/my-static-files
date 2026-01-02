@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>나만의 캔버스 그림판</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f5f5f5;
+        font-family: sans-serif;
+      }
+      canvas {
+        background-color: white;
+        border: 2px solid #333;
+        cursor: crosshair;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      .controls {
+        margin-bottom: 10px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      button {
+        padding: 8px 15px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #555;
+      }
+      input[type="color"] {
+        cursor: pointer;
+        border: none;
+        width: 40px;
+        height: 40px;
+        background: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <input type="color" id="colorPicker" value="#000000" />
+      <input type="range" id="lineWidth" min="1" max="20" value="5" />
+      <button id="clearBtn">전체 지우기</button>
+    </div>
+
+    <canvas id="paintCanvas" width="800" height="600"></canvas>
+
+    <script>
+      const canvas = document.getElementById("paintCanvas");
+      const ctx = canvas.getContext("2d");
+      const colorPicker = document.getElementById("colorPicker");
+      const lineWidthInput = document.getElementById("lineWidth");
+      const clearBtn = document.getElementById("clearBtn");
+
+      let isDrawing = false;
+
+      // 붓 설정
+      ctx.lineCap = "round"; // 선 끝을 둥글게
+      ctx.lineJoin = "round"; // 선 꺾임쇠를 둥글게
+
+      function startDrawing(e) {
+        isDrawing = true;
+        draw(e); // 클릭한 지점부터 바로 점이 찍히도록 호출
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+        ctx.beginPath(); // 선을 새로 시작하도록 초기화
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+
+        // 마우스 좌표 계산 (캔버스 내 좌표)
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineWidth = lineWidthInput.value;
+        ctx.strokeStyle = colorPicker.value;
+
+        ctx.lineTo(x, y); // 현재 좌표까지 선 긋기
+        ctx.stroke(); // 선 그리기 실행
+        ctx.beginPath(); // 다음 좌표로 부드럽게 이어지도록 경로 시작
+        ctx.moveTo(x, y); // 시작점 이동
+      }
+
+      // 마우스 이벤트 리스너
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseout", stopDrawing); // 캔버스 밖으로 나가면 멈춤
+
+      // 전체 지우기 기능
+      clearBtn.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+    </script>
+  </body>
+</html>
