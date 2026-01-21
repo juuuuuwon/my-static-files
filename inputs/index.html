@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selenium Complete Input Testbed</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: #f0f2f5;
+      }
+      h1 {
+        border-bottom: 3px solid #4a90e2;
+        padding-bottom: 10px;
+        color: #333;
+      }
+
+      .section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      h3 {
+        margin-top: 0;
+        color: #444;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        font-size: 1.1em;
+      }
+
+      .form-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .label-col {
+        width: 180px;
+        font-weight: bold;
+        color: #555;
+        font-size: 0.9em;
+      }
+      .input-col {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex: 1;
+      }
+
+      input,
+      select,
+      textarea {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      input:focus {
+        border-color: #4a90e2;
+        outline: none;
+        box-shadow: 0 0 3px rgba(74, 144, 226, 0.3);
+      }
+
+      .verify-btn {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .verify-btn:hover {
+        background-color: #357abd;
+      }
+
+      .result-span {
+        font-family: "Consolas", monospace;
+        color: #d63384;
+        font-weight: bold;
+        background: #f1f1f1;
+        padding: 6px 10px;
+        border-radius: 4px;
+        min-width: 60px;
+        text-align: center;
+        border: 1px solid #e1e1e1;
+      }
+
+      .desc {
+        font-size: 0.8em;
+        color: #888;
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Selenium Complete Input Testbed</h1>
+    <p>HTML5에 존재하는 <strong>모든 Input Type</strong>을 테스트합니다.</p>
+
+    <div class="section">
+      <h3>1. Text & Validations (유효성 검사가 다름)</h3>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-text">Type="text"</label></div>
+        <div class="input-col">
+          <input type="text" id="in-text" placeholder="Basic Text" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-text', 'res-text')"
+          >
+            확인
+          </button>
+          <span id="res-text" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col">
+          <label for="in-email">Type="email"</label>
+          <div class="desc">(@ 포함 검증)</div>
+        </div>
+        <div class="input-col">
+          <input type="email" id="in-email" placeholder="user@example.com" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-email', 'res-email')"
+          >
+            확인
+          </button>
+          <span id="res-email" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col">
+          <label for="in-url">Type="url"</label>
+          <div class="desc">(http:// 필수)</div>
+        </div>
+        <div class="input-col">
+          <input type="url" id="in-url" placeholder="https://site.com" />
+          <button class="verify-btn" onclick="verifyValue('in-url', 'res-url')">
+            확인
+          </button>
+          <span id="res-url" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col">
+          <label for="in-tel">Type="tel"</label>
+          <div class="desc">(모바일 숫자키패드)</div>
+        </div>
+        <div class="input-col">
+          <input type="tel" id="in-tel" placeholder="010-1234-5678" />
+          <button class="verify-btn" onclick="verifyValue('in-tel', 'res-tel')">
+            확인
+          </button>
+          <span id="res-tel" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col">
+          <label for="in-search">Type="search"</label>
+          <div class="desc">(X 버튼 생성됨)</div>
+        </div>
+        <div class="input-col">
+          <input type="search" id="in-search" placeholder="검색어" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-search', 'res-search')"
+          >
+            확인
+          </button>
+          <span id="res-search" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-pw">Type="password"</label></div>
+        <div class="input-col">
+          <input type="password" id="in-pw" placeholder="******" />
+          <button class="verify-btn" onclick="verifyValue('in-pw', 'res-pw')">
+            확인
+          </button>
+          <span id="res-pw" class="result-span"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>2. Numbers & Sliders</h3>
+      <div class="form-row">
+        <div class="label-col"><label for="in-num">Type="number"</label></div>
+        <div class="input-col">
+          <input type="number" id="in-num" value="10" />
+          <button class="verify-btn" onclick="verifyValue('in-num', 'res-num')">
+            확인
+          </button>
+          <span id="res-num" class="result-span"></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="label-col"><label for="in-range">Type="range"</label></div>
+        <div class="input-col">
+          <input
+            type="range"
+            id="in-range"
+            min="0"
+            max="100"
+            value="50"
+            oninput="
+              document.getElementById('range-preview').innerText = this.value
+            "
+          />
+          <span id="range-preview" style="font-size: 12px; margin-right: 5px"
+            >50</span
+          >
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-range', 'res-range')"
+          >
+            확인
+          </button>
+          <span id="res-range" class="result-span"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>3. Date & Time (Browser Specific UI)</h3>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-date">Type="date"</label></div>
+        <div class="input-col">
+          <input type="date" id="in-date" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-date', 'res-date')"
+          >
+            확인
+          </button>
+          <span id="res-date" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col">
+          <label for="in-datetime">Type="datetime-local"</label>
+        </div>
+        <div class="input-col">
+          <input type="datetime-local" id="in-datetime" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-datetime', 'res-datetime')"
+          >
+            확인
+          </button>
+          <span id="res-datetime" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-month">Type="month"</label></div>
+        <div class="input-col">
+          <input type="month" id="in-month" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-month', 'res-month')"
+          >
+            확인
+          </button>
+          <span id="res-month" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-week">Type="week"</label></div>
+        <div class="input-col">
+          <input type="week" id="in-week" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-week', 'res-week')"
+          >
+            확인
+          </button>
+          <span id="res-week" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-time">Type="time"</label></div>
+        <div class="input-col">
+          <input type="time" id="in-time" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-time', 'res-time')"
+          >
+            확인
+          </button>
+          <span id="res-time" class="result-span"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>4. Special & Hidden</h3>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-color">Type="color"</label></div>
+        <div class="input-col">
+          <input type="color" id="in-color" value="#ff0000" />
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-color', 'res-color')"
+          >
+            확인
+          </button>
+          <span id="res-color" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label for="in-file">Type="file"</label></div>
+        <div class="input-col">
+          <input type="file" id="in-file" />
+          <button
+            class="verify-btn"
+            onclick="verifyFile('in-file', 'res-file')"
+          >
+            확인
+          </button>
+          <span id="res-file" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label>Type="image"</label></div>
+        <div class="input-col">
+          <input
+            type="image"
+            id="in-image"
+            alt="Login"
+            src="https://via.placeholder.com/100x30/4a90e2/ffffff?text=Image+Btn"
+            onclick="verifyImage(event, 'res-image')"
+          />
+          <span class="desc"><- 클릭해보세요</span>
+          <span id="res-image" class="result-span"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="label-col"><label>Type="hidden"</label></div>
+        <div class="input-col">
+          <input type="hidden" id="in-hidden" value="Secret_Token_1234" />
+          <span style="color: #aaa; font-style: italic; margin-right: 10px"
+            >(화면에 안보임)</span
+          >
+          <button
+            class="verify-btn"
+            onclick="verifyValue('in-hidden', 'res-hidden')"
+          >
+            숨겨진 값 확인
+          </button>
+          <span id="res-hidden" class="result-span"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>5. Buttons (Utility)</h3>
+      <div class="form-row">
+        <div class="input-col" style="justify-content: space-around">
+          <input
+            type="button"
+            value="Type='button'"
+            class="verify-btn"
+            style="background: #6c757d"
+            onclick="alert('Pure Button Clicked')"
+          />
+          <input
+            type="submit"
+            value="Type='submit'"
+            class="verify-btn"
+            style="background: #28a745"
+            onclick="alert('Form Submit Action')"
+          />
+          <input
+            type="reset"
+            value="Type='reset'"
+            class="verify-btn"
+            style="background: #dc3545"
+            onclick="alert('Form Reset Action')"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function verifyValue(inputId, outputId) {
+        const el = document.getElementById(inputId);
+        const res = document.getElementById(outputId);
+        res.innerText = el.value;
+      }
+
+      function verifyFile(inputId, outputId) {
+        const el = document.getElementById(inputId);
+        const res = document.getElementById(outputId);
+        res.innerText = el.files.length > 0 ? el.files[0].name : "선택 안함";
+      }
+
+      function verifyImage(e, outputId) {
+        e.preventDefault(); // 페이지 리로드 방지
+        const res = document.getElementById(outputId);
+        res.innerText = "Clicked!";
+      }
+    </script>
+  </body>
+</html>
